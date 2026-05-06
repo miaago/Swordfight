@@ -18,6 +18,13 @@ public class CameraMovement : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        // Fetch the sensitivity from the global class
+        GameSettings.Load();
+
+        // Multiply your existing base sens by the user's preferred multiplier
+        sensX = sensX * GameSettings.MouseSensitivity;
+        sensY = sensY * GameSettings.MouseSensitivity;
     }
 
     private void Update()
@@ -45,4 +52,3 @@ public class CameraMovement : MonoBehaviour
         GetComponent<Camera>().DOFieldOfView(endValue, 0.25f);
     }
 }
-
