@@ -5,20 +5,26 @@ using TMPro;
 
 public class SettingsController : MonoBehaviour
 {
+    [Header("UI References")]
     public Slider sensSlider;
     public TextMeshProUGUI sensValueText;
 
+    [Header("Sensitivity Settings")]
+    [SerializeField] private float minSensitivity = 1f;
+    [SerializeField] private float maxSensitivity = 10f;
+
     void Start()
     {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         GameSettings.Load();
 
-        sensSlider.minValue = 0.1f;
-        sensSlider.maxValue = 10f;
+        sensSlider.minValue = minSensitivity;
+        sensSlider.maxValue = maxSensitivity;
         sensSlider.value = GameSettings.MouseSensitivity;
 
         UpdateText(sensSlider.value);
-
-        // Listen for when the player moves the slider
         sensSlider.onValueChanged.AddListener(OnSensChanged);
     }
 
@@ -32,11 +38,19 @@ public class SettingsController : MonoBehaviour
     void UpdateText(float value)
     {
         if (sensValueText != null)
-            sensValueText.text = $"Sensitivity: {value:0.0}";
+            sensValueText.text = $"{value:0}";
     }
 
     public void BackToMenu()
     {
-        SceneManager.LoadScene("MainMenu");
+        if (PauseManager.FromGameScene)
+        {
+            PauseManager.FromGameScene = false;
+            SceneManager.LoadScene("Game");
+        }
+        else
+        {
+            SceneManager.LoadScene("Menu");
+        }
     }
 }
