@@ -14,8 +14,10 @@
 
 using UnityEngine;
 
+
 public class EnemyDeath : MonoBehaviour
 {
+    public WaveSpawner waveSpawner;
     // Activates as a trigger instead
     private void OnTriggerEnter(Collider other)
     {
@@ -30,5 +32,6 @@ public class EnemyDeath : MonoBehaviour
         Debug.Log("Enemy has been defeated!");
 
         Destroy(gameObject);
+        waveSpawner.waves[waveSpawner.currentWaveIndex].enemiesLeft--;
     }
 }

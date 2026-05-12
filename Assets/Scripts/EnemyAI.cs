@@ -1,57 +1,32 @@
-// using UnityEngine;
-// using UnityEngine.AI;
-
-// public class NewEnemyAI : MonoBehaviour
-// {
-//     private Transform playerTarget;
-//     private NavMeshAgent agent;
-
-//     void Awake()
-//     {
-//         agent = GetComponent<NavMeshAgent>();
-
-//         // This looks for a GameObject tagged "Player"
-//         GameObject player = GameObject.FindWithTag("Player");
-
-//         if (player != null)
-//         {
-//             playerTarget = player.transform;
-//         }
-//     }
-
-//     void Update()
-//     {
-//         if (playerTarget != null)
-//         {
-//             agent.SetDestination(playerTarget.position);
-//         }
-//     }
-// }
-
+using System.Runtime.InteropServices;
+using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class EnemyAI : MonoBehaviour
 {
     [Header("References")]
     public NavMeshAgent agent;
     public Transform player;
-    private PlayerMovement pm;
-    private PlayerDash pd;
-    private SwordSwing ss;
+    public Rigidbody rb;
+    public GameObject sword;
+    public GameObject swordHitbox;
 
     [Header("Behavior Settings")]
     public float chaseRange = 15f;
-    public float attackRange = 2f;
+    public float attackRange = 4f;
     public float dashChance = 0.05f; // Chance per frame to dash if in range
+    public float moveSpeed = 0.5f;
 
     private string lastState = "";
+    public float swingSpeed = 0;
 
     void Start()
     {
-        pm = GetComponent<PlayerMovement>();
-        pd = GetComponent<PlayerDash>();
-        ss = GetComponent<SwordSwing>();
+        // player = GetComponent<Transform>Player;
+        // ss = GetComponent<SwordSwing>();
+        swordHitbox.SetActive(false);        
 
         // Disable agent's auto-movement so Rigidbody handles the physics
         agent.updatePosition = false;
@@ -62,47 +37,25 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
-        LookAtPlayer();
+        // LookAtPlayer();
+        SpeedControl();
 
         float distance = Vector3.Distance(transform.position, player.position);
         float heightDifference = player.position.y - transform.position.y;
 
-        string currentState = "";
-
-        if (distance <= chaseRange)
-        {
-            if (distance <= attackRange)
-            {
-                currentState = "ATTACKING";
-            }
-            else
-            {
-                currentState = "CHASING";
-            }
-        }
-        else
-        {
-            currentState = "IDLE";
-        }
-
-        if (currentState != lastState)
-        {
-            Debug.Log($"AI State Changed to: {currentState}. Distance: {distance}");
-            lastState = currentState;
-        }
-
-        if (currentState == "ATTACKING")
-        {
-            AttackState();
-        }
-        else if (currentState == "CHASING")
+        if (distance > attackRange)
         {
             ChasePlayer(distance, heightDifference);
         }
-        else
+        else if (distance < attackRange)
         {
-            IdleState();
+            StartCoroutine(RDDSlash());
         }
+    }
+
+    void FixedUpdate()
+    {
+        LookAtPlayer();
     }
 
     [Header("AI Timing")]
@@ -115,37 +68,10 @@ public class EnemyAI : MonoBehaviour
 
         agent.nextPosition = transform.position;
 
-        Vector3 direction = (agent.nextPosition - transform.position).normalized;
-        pm.externalV = Vector3.Dot(pm.orientation.forward, direction);
-        pm.externalH = Vector3.Dot(pm.orientation.right, direction);
+        Vector3 direction = (agent.destination - transform.position).normalized;
 
-        //Debug.Log($"Inputs - V: {pm.externalV} | H: {pm.externalH}");
+        rb.AddForce(direction * moveSpeed, ForceMode.Force);
 
-        pm.isSprinting = true;
-
-        // If player is on seats or high ground, tell pm to jump
-        if (height > 1.5f && pm.isGrounded)
-        {
-            pm.externalJump = true;
-        }
-        else
-        {
-            pm.externalJump = false;
-        }
-
-        // Update the timer
-        if (dashTimer > 0) dashTimer -= Time.deltaTime;
-
-        // Only dash if far away AND the timer is ready
-        if (dist > 7f && dashTimer <= 0 && !pm.dashing)
-        {
-            if (Random.value < dashChance)
-            {
-                pd.ExternalDashTrigger();
-                dashTimer = dashCooldown; // Reset the timer
-                Debug.Log("AI Dashing!");
-            }
-        }
     }
 
     void LookAtPlayer()
@@ -161,25 +87,41 @@ public class EnemyAI : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 5f);
         }
     }
-
-    void AttackState()
+    private void SpeedControl()
     {
-        StopMovement();
 
-        // Trigger the same SwordSwing logic the player uses
-        // Since RDDSlash is an IEnumerator, we check if it's already swinging
-        StartCoroutine(ss.RDDSlash());
+        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        if (flatVel.magnitude > moveSpeed)
+        {
+            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
+        }
+    
+        // if (maxYSpeed != 0 && rb.linearVelocity.y > maxYSpeed) // limit y speed
+        // {
+        //     rb.linearVelocity = new Vector3(rb.linearVelocity.x, maxYSpeed, rb.linearVelocity.z);
+        // }
+    }
+    void AttackPlayer()
+    {
+        StartCoroutine(RDDSlash());
     }
 
-    void IdleState()
+    private IEnumerator RDDSlash()
     {
-        StopMovement();
+        enableHitbox();
+        sword.GetComponent<Animator>().Play("RDDSlash");
+        yield return new WaitForSeconds(swingSpeed);
+        sword.GetComponent<Animator>().Play("SwordIdle");
+        disableHitbox();
+    }
+        public void enableHitbox()
+    {
+        swordHitbox.SetActive(true);
     }
 
-    void StopMovement()
+    public void disableHitbox()
     {
-        pm.externalV = 0;
-        pm.externalH = 0;
-        pm.isSprinting = false;
+        swordHitbox.SetActive(false);
     }
 }
