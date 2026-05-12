@@ -10,8 +10,8 @@ public class SettingsController : MonoBehaviour
     public TextMeshProUGUI sensValueText;
 
     [Header("Sensitivity Settings")]
-    [SerializeField] private float minSensitivity = 1f;
-    [SerializeField] private float maxSensitivity = 10f;
+    [SerializeField] private float minSensitivity = 0.1f;
+    [SerializeField] private float maxSensitivity = 10.0f;
 
     void Start()
     {
@@ -38,7 +38,7 @@ public class SettingsController : MonoBehaviour
     void UpdateText(float value)
     {
         if (sensValueText != null)
-            sensValueText.text = $"{value:0}";
+            sensValueText.text = $"{value:0.0}";
     }
 
     public void BackToMenu()

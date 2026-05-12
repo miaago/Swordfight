@@ -16,20 +16,16 @@ public class SwordSwing : MonoBehaviour
     }
     void Update()
     {
-        // Only swing if not AI
-        PlayerMovement pm = GetComponent<PlayerMovement>();
 
-        if (pm != null && !pm.isAI)
+        if (Input.GetKeyDown(rightDownDiag))
         {
-            if (Input.GetKeyDown(rightDownDiag))
-            {
-                StartCoroutine(RDDSlash());
-            }
+            StartCoroutine(RDDSlash());
         }
+
     }
 
     //IEnumerator RDDSlash()
-    public IEnumerator RDDSlash()   //Made public so EnemyAI.cs can access and use sword
+    private IEnumerator RDDSlash()
     {
         enableHitbox();
         sword.GetComponent<Animator>().Play("RDDSlash");
@@ -47,32 +43,5 @@ public class SwordSwing : MonoBehaviour
     {
         swordHitbox.SetActive(false);
     }
-
-    // void Update()
-    // {
-    //     if (swordSwingCooldown == 0f && Input.GetKey(rightDownDiagSlash))
-    //     {
-    //         MyAnimation();
-    //         Invoke(nameof(ResetAnimation), 0.5f);
-
-    //     }
-
-    //     // if (swordSwingCooldown > 0f)
-    //     // {
-    //     //     swordSwingCooldown -= Time.deltaTime * 1f;
-    //     // }
-    // }
-
-    // private void MyAnimation()
-    // {
-    //     if (Input.GetKey(rightDownDiagSlash))
-    //         swordAnimator.SetBool("RightDownwardDiagonalSlash", true);
-    //         // swordSwingCooldown = 1f;
-    // }
-
-    // private void ResetAnimation()
-    // {
-    //     swordAnimator.SetBool("RightDownwardDiagonalSlash", false);
-    // }
 
 }

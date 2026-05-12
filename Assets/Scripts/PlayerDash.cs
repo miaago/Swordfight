@@ -37,17 +37,18 @@ public class PlayerDash : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         pm = GetComponent<PlayerMovement>();
     }
+    
 
     private void Update()
     {
-        // Only check for keys if this is NOT an AI
-        if (pm != null && !pm.isAI)
-        {
+        // // Only check for keys if this is NOT an AI
+        // if (pm != null && !pm.isAI)
+        // {
             if (Input.GetKeyDown(dashKey))
             {
                 Dash();
             }
-        }
+        // }
 
         if (dashCooldownTimer > 0)
         {
@@ -127,8 +128,8 @@ public class PlayerDash : MonoBehaviour
 
     private Vector3 GetDirection(Transform forwardT)
     {
-        // If it's an AI, they don't use Axis inputs, so we just dash forward
-        if (pm != null && pm.isAI) return forwardT.forward;
+        // // If it's an AI, they don't use Axis inputs, so we just dash forward
+        // if (pm != null && pm.isAI) return forwardT.forward;
 
         float horizontalInput = Input.GetAxisRaw("Horizontal");
         float verticalInput = Input.GetAxisRaw("Vertical");
