@@ -2,7 +2,7 @@ using UnityEngine;
 
 public static class GameSettings
 {
-    public static float MouseSensitivity = 1.5f; // Default starting value
+    public static float MouseSensitivity = 1.5f;
 
     private const string SensKey = "MouseSensitivity";
 

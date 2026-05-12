@@ -5,7 +5,7 @@ using UnityEngine;
 public class SwordSwing : MonoBehaviour
 {
     // public Animator swordAnimator;
-    public GameObject sword;    
+    public GameObject sword;
     public KeyCode rightDownDiag = KeyCode.Mouse1;
     public float swingSpeed;
     public GameObject swordHitbox;
@@ -15,14 +15,21 @@ public class SwordSwing : MonoBehaviour
         swordHitbox.SetActive(false);
     }
     void Update()
-    {    
-        if (Input.GetKey(rightDownDiag))
+    {
+        // Only swing if not AI
+        PlayerMovement pm = GetComponent<PlayerMovement>();
+
+        if (pm != null && !pm.isAI)
         {
-            StartCoroutine(RDDSlash());
+            if (Input.GetKeyDown(rightDownDiag))
+            {
+                StartCoroutine(RDDSlash());
+            }
         }
     }
 
-    IEnumerator RDDSlash()
+    //IEnumerator RDDSlash()
+    public IEnumerator RDDSlash()   //Made public so EnemyAI.cs can access and use sword
     {
         enableHitbox();
         sword.GetComponent<Animator>().Play("RDDSlash");

@@ -1,6 +1,4 @@
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
-using UnityEditor.Compilation;
+using System.Collections;
 using UnityEngine;
 
 public class PlayerDash : MonoBehaviour
@@ -34,7 +32,6 @@ public class PlayerDash : MonoBehaviour
     public bool disableGravity = false;
     public bool resetVel = true;
 
-
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -43,12 +40,16 @@ public class PlayerDash : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(dashKey))
+        // Only check for keys if this is NOT an AI
+        if (pm != null && !pm.isAI)
         {
-            Dash();
+            if (Input.GetKeyDown(dashKey))
+            {
+                Dash();
+            }
         }
-        
-        if(dashCooldownTimer > 0)
+
+        if (dashCooldownTimer > 0)
         {
             dashCooldownTimer -= Time.deltaTime;
         }
@@ -59,14 +60,19 @@ public class PlayerDash : MonoBehaviour
         if (dashCooldownTimer > 0) return;
         else dashCooldownTimer = dashCooldown;
 
-        pm.dashing = true;
-        pm.maxYSpeed = maxDashYSpeed;
+        if (pm != null)
+        {
+            pm.dashing = true;
+            pm.maxYSpeed = maxDashYSpeed;
+        }
 
-        cam.DoFov(dashFov);
+        // Only change FOV if a camera script is assigned
+        if (cam != null) cam.DoFov(dashFov);
 
         Transform forwardT;
 
-        if (useCameraForward)
+        // If playerCam is missing, force it to use orientation instead
+        if (useCameraForward && playerCam != null)
         {
             forwardT = playerCam;
         }
@@ -78,7 +84,7 @@ public class PlayerDash : MonoBehaviour
         Vector3 direction = GetDirection(forwardT);
 
         Vector3 forceToApply = direction * dashForce + orientation.up * dashUpwardForce;
-        
+
         delayedForceToApply = forceToApply;
 
         if (disableGravity)
@@ -87,7 +93,6 @@ public class PlayerDash : MonoBehaviour
         }
 
         Invoke(nameof(DelayedDashForce), 0.025f);
-        
         Invoke(nameof(ResetDash), dashDuration);
     }
 
@@ -105,10 +110,14 @@ public class PlayerDash : MonoBehaviour
 
     private void ResetDash()
     {
-        pm.dashing = false;
-        pm.maxYSpeed = 0;
+        if (pm != null)
+        {
+            pm.dashing = false;
+            pm.maxYSpeed = 0;
+        }
 
-        cam.DoFov(60f);
+        // Reset FOV safely
+        if (cam != null) cam.DoFov(60f);
 
         if (disableGravity)
         {
@@ -118,25 +127,36 @@ public class PlayerDash : MonoBehaviour
 
     private Vector3 GetDirection(Transform forwardT)
     {
+        // If it's an AI, they don't use Axis inputs, so we just dash forward
+        if (pm != null && pm.isAI) return forwardT.forward;
+
         float horizontalInput = Input.GetAxisRaw("Horizontal");
-        float VerticalInput = Input.GetAxisRaw("Vertical");
+        float verticalInput = Input.GetAxisRaw("Vertical");
 
         Vector3 direction = new Vector3();
 
-        if(allowAllDirections)
+        if (allowAllDirections)
         {
-            direction = forwardT.forward * VerticalInput + forwardT.right * horizontalInput;
+            direction = forwardT.forward * verticalInput + forwardT.right * horizontalInput;
         }
         else
         {
             direction = forwardT.forward;
         }
 
-        if (VerticalInput == 0 && horizontalInput == 0)
+        if (verticalInput == 0 && horizontalInput == 0)
         {
             direction = forwardT.forward;
         }
 
         return direction.normalized;
+    }
+
+    public void ExternalDashTrigger()
+    {
+        if (dashCooldownTimer <= 0)
+        {
+            Dash();
+        }
     }
 }
