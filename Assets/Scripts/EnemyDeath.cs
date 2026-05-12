@@ -1,12 +1,34 @@
+// using UnityEngine;
+
+// public class EnemyDeath : MonoBehaviour
+// {
+//     void OnCollisionEnter(Collision collision)
+//     {
+//         if (collision.gameObject.CompareTag("Weapon"))
+//         {
+//             Destroy(gameObject);
+//         }
+//     }
+// }
+
+
 using UnityEngine;
 
 public class EnemyDeath : MonoBehaviour
 {
-    void OnCollisionEnter(Collision collision)
+    // Activates as a trigger instead
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.CompareTag("Weapon"))
+        if (other.CompareTag("Weapon"))
         {
-            Destroy(gameObject);
+            Die();
         }
+    }
+
+    void Die()
+    {
+        Debug.Log("Enemy has been defeated!");
+
+        Destroy(gameObject);
     }
 }
